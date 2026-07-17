@@ -1,33 +1,22 @@
-package org.example.uberreviewservice.model;
+package org.example.uberreviewservice.models;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 
 
 @Entity
-@Table(name = "review_table")
+@Table(name = "booking_review")
 @Setter
 @Getter
 @Builder
-public class Review {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(nullable = false)
-    private  Long reviewId;
-
+@NoArgsConstructor
+@AllArgsConstructor
+@Inheritance(strategy = InheritanceType.JOINED)
+public class Review extends BaseModel{
     @Column(nullable = false)
     private String description;
-
-    @Column(nullable = false)
-    private LocalDate createdDate;
-
-    @Column(nullable = false)
-    private LocalDateTime lastUpdatedDate;
 
     @Column(nullable = false)
     private double rating;
