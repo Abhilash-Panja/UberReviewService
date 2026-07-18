@@ -19,6 +19,11 @@ public class Booking extends BaseModel{
     @Enumerated(EnumType.STRING)
     private BookingStatus bookingStatus;
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    Review review;
+    private Review review;
+    @ManyToOne
+    private Driver driver;
+    @ManyToOne
+    private  Passenger passenger;
+
 
 }
