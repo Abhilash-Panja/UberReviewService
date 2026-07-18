@@ -1,8 +1,7 @@
 package org.example.uberreviewservice.models;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalTime;
 
 
@@ -13,8 +12,13 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking extends BaseModel{
-    LocalTime startTime;
-    LocalTime endTime;
-    long totalDistance;
-    BookingStatus bookingStatus;
+
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private long totalDistance;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus bookingStatus;
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    Review review;
+
 }

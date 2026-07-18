@@ -2,10 +2,6 @@ package org.example.uberreviewservice.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-
-
-
 @Entity
 @Table(name = "booking_review")
 @Setter
@@ -15,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Review extends BaseModel{
+
     @Column(nullable = false)
     private String description;
 
