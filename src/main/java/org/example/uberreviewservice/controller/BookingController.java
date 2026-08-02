@@ -6,7 +6,7 @@ import org.example.uberreviewservice.service.BookingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -36,7 +36,7 @@ public class BookingController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<BookingResponseDTO> updateStatus(
             @PathVariable Long id,
-            @RequestBody BookingStatusUpdateDTO statusUpdateDTO) {
+            @Valid @RequestBody BookingStatusUpdateDTO statusUpdateDTO) {
         return ResponseEntity.ok(bookingService.updateStatus(id, statusUpdateDTO));
     }
 }

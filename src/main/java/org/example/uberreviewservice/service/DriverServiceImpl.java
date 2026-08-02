@@ -1,22 +1,25 @@
 package org.example.uberreviewservice.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.example.uberreviewservice.dto.driver.DriverRequestDTO;
 import org.example.uberreviewservice.dto.driver.DriverResponseDTO;
+import org.example.uberreviewservice.exception.DriverHasActiveBookingsException;
 import org.example.uberreviewservice.exception.DriverNotFoundException;
 import org.example.uberreviewservice.exception.DuplicateLicenceNumberException;
 import org.example.uberreviewservice.mapper.DriverMapper;
 import org.example.uberreviewservice.model.Driver;
+import org.example.uberreviewservice.repository.BookingRepository;
 import org.example.uberreviewservice.repository.DriverRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class DriverServiceImpl implements DriverService {
 
     private final DriverRepository driverRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     public DriverResponseDTO createDriver(DriverRequestDTO requestDTO) {
@@ -69,10 +72,15 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public void deleteDriver(Long id) {
-        if (!driverRepository.existsById(id)) {
-            throw new DriverNotFoundException(id);
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(() -> new DriverNotFoundException(id));
+
+        long bookingCount = bookingRepository.countByDriverId(id);
+        if (bookingCount > 0) {
+            throw new DriverHasActiveBookingsException(id, bookingCount);
         }
-        driverRepository.deleteById(id);
+
+        driverRepository.delete(driver);
     }
 
     private void validateDriverRequest(DriverRequestDTO requestDTO) {

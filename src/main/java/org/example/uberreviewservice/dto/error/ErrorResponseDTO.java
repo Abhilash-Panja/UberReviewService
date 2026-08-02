@@ -1,6 +1,8 @@
 package org.example.uberreviewservice.dto.error;
 
 import lombok.*;
+import org.springframework.http.HttpStatus;
+
 import java.time.LocalDateTime;
 
 @Getter
