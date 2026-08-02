@@ -17,9 +17,7 @@ public class Booking extends BaseModel{
     private LocalTime endTime;
     private long totalDistance;
     @Enumerated(EnumType.STRING)
-    private BookingStatus bookingStatus;
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    private Review review;
+    private BookingStatus bookingStatus;;
     @ManyToOne
     private Driver driver;
     @ManyToOne

@@ -18,4 +18,8 @@ public class Review extends BaseModel{
     @Column(nullable = false)
     private double rating;
 
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    @JoinColumn(nullable = false)
+    private Booking booking;
+
 }
