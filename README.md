@@ -10,7 +10,7 @@ A Spring Boot backend that models the core of a ride-hailing platform — passen
 - **Drivers** — create, fetch, list, update, delete driver profiles; unique licence numbers enforced.
 - **Bookings** — create a booking (auto-assigns an available driver to a passenger); fetch a booking or list all bookings; update ride status through a controlled state machine.
 - **Booking status state machine** — enforces valid transitions only:
-  `ASSIGNED_DRIVER → CAB_ARRIVED → STARTED → IN_RIDE → COMPLETED`, with `CANCELED` allowed from `ASSIGNED_DRIVER`, `CAB_ARRIVED`, or `STARTED`.
+`ASSIGNED_DRIVER → CAB_ARRIVED → STARTED → IN_RIDE → COMPLETED`, with `CANCELED` allowed from `ASSIGNED_DRIVER`, `CAB_ARRIVED`, or `STARTED`.
 - **Reviews** — passengers can leave a rating + written review for a completed booking; one review per booking; fetch a review by ID or by booking ID.
 - **Schema versioning** — database schema is managed with Flyway migrations rather than `ddl-auto=update`, so schema changes are explicit and repeatable.
 - **Centralized error handling** — consistent JSON error responses for not-found, conflict, and invalid-state-transition failures.
@@ -20,17 +20,17 @@ A Spring Boot backend that models the core of a ride-hailing platform — passen
 
 ## Tech Stack
 
-| Layer            | Technology                                  |
-|-------------------|-----------------------------------------------|
-| Language           | Java 17                                       |
-| Framework          | Spring Boot 4.1.0                             |
-| Web                | Spring Web (MVC)                              |
-| Persistence        | Spring Data JPA / Hibernate                   |
-| Database           | MySQL                                         |
-| Schema migrations  | Flyway                                        |
-| Boilerplate        | Lombok                                        |
-| Build Tool         | Gradle (wrapper included)                     |
-| Testing            | JUnit 5 (via Spring Boot test starters)       |
+| Layer             | Technology                              |
+| ----------------- | ---------------------------------------- |
+| Language          | Java 17                                 |
+| Framework         | Spring Boot 4.1.0                       |
+| Web               | Spring Web (MVC)                        |
+| Persistence       | Spring Data JPA / Hibernate             |
+| Database          | MySQL                                   |
+| Schema migrations | Flyway                                  |
+| Boilerplate       | Lombok                                  |
+| Build Tool        | Gradle (wrapper included)               |
+| Testing           | JUnit 5 (via Spring Boot test starters); manual REST testing via Postman |
 
 ---
 
@@ -88,14 +88,14 @@ src/main/resources/
 
 ### 1. Clone the repository
 
-```bash
+```
 git clone https://github.com/Abhilash-Panja/UberReviewService.git
 cd UberReviewService
 ```
 
 ### 2. Create the database
 
-```sql
+```
 CREATE DATABASE uberdb;
 ```
 
@@ -105,7 +105,7 @@ Flyway will create and version all tables automatically on startup — no manual
 
 Update `src/main/resources/application.properties` with your local MySQL credentials if they differ from the defaults:
 
-```properties
+```
 spring.application.name=UberReviewService
 spring.datasource.url=jdbc:mysql://localhost:3306/uberdb
 spring.datasource.username=root
@@ -120,12 +120,11 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 spring.flyway.enabled=true
 spring.flyway.locations=classpath:db/migration
 ```
-
 > **Note:** `ddl-auto=validate` means Hibernate will check the schema matches the entities but won't modify it — all schema changes must go through a new Flyway migration file. Also, plaintext DB credentials here are fine for local dev only; move them to environment variables before deploying anywhere shared.
 
 ### 4. Run the application
 
-```bash
+```
 # macOS / Linux
 ./gradlew bootRun
 
@@ -137,7 +136,7 @@ The API will be available at `http://localhost:8080`.
 
 ### 5. Run tests
 
-```bash
+```
 ./gradlew test
 ```
 
@@ -149,32 +148,32 @@ Base path: `/api/v1`
 
 ### Passengers — `/api/v1/passengers`
 
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| POST   | `/`        | Create a new passenger |
-| GET    | `/{id}`    | Get passenger by ID |
-| GET    | `/`        | List all passengers |
-| PUT    | `/{id}`    | Update a passenger |
-| DELETE | `/{id}`    | Delete a passenger |
+| Method | Endpoint | Description            |
+| ------ | -------- | ----------------------- |
+| POST   | `/`      | Create a new passenger |
+| GET    | `/{id}`  | Get passenger by ID    |
+| GET    | `/`      | List all passengers    |
+| PUT    | `/{id}`  | Update a passenger     |
+| DELETE | `/{id}`  | Delete a passenger — blocked with `409 Conflict` if the passenger has active bookings |
 
 ### Drivers — `/api/v1/drivers`
 
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| POST   | `/`        | Create a new driver |
-| GET    | `/{id}`    | Get driver by ID |
-| GET    | `/`        | List all drivers |
-| PUT    | `/{id}`    | Update a driver |
-| DELETE | `/{id}`    | Delete a driver |
+| Method | Endpoint | Description         |
+| ------ | -------- | -------------------- |
+| POST   | `/`      | Create a new driver |
+| GET    | `/{id}`  | Get driver by ID    |
+| GET    | `/`      | List all drivers    |
+| PUT    | `/{id}`  | Update a driver     |
+| DELETE | `/{id}`  | Delete a driver — blocked with `409 Conflict` if the driver has active bookings |
 
 ### Bookings — `/api/v1/bookings`
 
-| Method | Endpoint          | Description                                          |
-|--------|---------------------|---------------------------------------------------------|
-| POST   | `/`                  | Create a booking for a passenger (auto-assigns an available driver) |
-| GET    | `/{id}`              | Get a booking by ID                                      |
-| GET    | `/`                  | List all bookings                                        |
-| PATCH  | `/{id}/status`       | Update a booking's status (validated against the state machine) |
+| Method | Endpoint       | Description                                                         |
+| ------ | -------------- | --------------------------------------------------------------------- |
+| POST   | `/`            | Create a booking for a passenger (auto-assigns an available driver) |
+| GET    | `/{id}`        | Get a booking by ID                                                  |
+| GET    | `/`            | List all bookings                                                    |
+| PATCH  | `/{id}/status` | Update a booking's status (validated against the state machine). Body: `{ "newStatus": "CAB_ARRIVED" }` |
 
 **Booking status flow:**
 
@@ -184,13 +183,15 @@ ASSIGNED_DRIVER → CAB_ARRIVED → STARTED → IN_RIDE → COMPLETED
         └──────────────┴───────────┴──> CANCELED
 ```
 
+Both forward skips (e.g. `ASSIGNED_DRIVER → COMPLETED`) and backward transitions (e.g. `IN_RIDE → STARTED`) are rejected with `409 Conflict`.
+
 ### Reviews — `/api/v1/reviews`
 
-| Method | Endpoint                  | Description                          |
-|--------|------------------------------|-----------------------------------------|
-| POST   | `/`                           | Create a review for a completed booking |
-| GET    | `/{id}`                       | Get a review by ID                      |
-| GET    | `/booking/{bookingId}`        | Get the review for a specific booking   |
+| Method | Endpoint               | Description                             |
+| ------ | ----------------------- | ----------------------------------------- |
+| POST   | `/`                    | Create a review for a completed booking |
+| GET    | `/{id}`                | Get a review by ID                      |
+| GET    | `/booking/{bookingId}` | Get the review for a specific booking   |
 
 ---
 
@@ -198,7 +199,7 @@ ASSIGNED_DRIVER → CAB_ARRIVED → STARTED → IN_RIDE → COMPLETED
 
 All handled exceptions return a consistent JSON shape via `ErrorResponseDTO`, e.g.:
 
-```json
+```
 {
   "timestamp": "2026-08-02T10:15:30",
   "status": 404,
@@ -208,17 +209,40 @@ All handled exceptions return a consistent JSON shape via `ErrorResponseDTO`, e.
 }
 ```
 
-| Exception                                  | Typical HTTP Status |
-|----------------------------------------------|------------------------|
-| `PassengerNotFoundException`                 | 404 Not Found          |
-| `DriverNotFoundException`                    | 404 Not Found          |
-| `BookingNotFoundException`                   | 404 Not Found          |
-| `ReviewNotFoundException`                     | 404 Not Found          |
-| `NoDriversAvailableException`                 | 409 Conflict / 503     |
-| `DuplicateLicenceNumberException`             | 409 Conflict           |
-| `ReviewAlreadyExistsException`                | 409 Conflict           |
-| `InvalidBookingStatusTransitionException`     | 400 Bad Request        |
-| `InvalidBookingStateForReviewException`       | 400 Bad Request        |
+| Exception                                 | Actual HTTP Status |
+| ------------------------------------------- | -------------------- |
+| `PassengerNotFoundException`              | 404 Not Found       |
+| `DriverNotFoundException`                 | 404 Not Found       |
+| `BookingNotFoundException`                | 404 Not Found       |
+| `ReviewNotFoundException`                 | 404 Not Found       |
+| `NoDriversAvailableException`             | 409 Conflict / 503  |
+| `DuplicateLicenceNumberException`         | 409 Conflict        |
+| `ReviewAlreadyExistsException`            | 409 Conflict        |
+| `InvalidBookingStatusTransitionException` | 409 Conflict        |
+| `InvalidBookingStateForReviewException`   | 409 Conflict        |
+| `PassengerHasActiveBookingsException`     | 409 Conflict        |
+| `DriverHasActiveBookingsException`        | 409 Conflict        |
+| `MethodArgumentNotValidException` (e.g. missing `newStatus`) | 400 Bad Request |
+
+> Note: `InvalidBookingStatusTransitionException` and `InvalidBookingStateForReviewException` are handled as `409 Conflict` in the current implementation (verified via manual testing), not `400 Bad Request` as an earlier draft of this table stated.
+
+---
+
+## API Testing
+
+The full REST API was manually tested end-to-end with Postman, following the entity dependency (foreign key) order: **Driver / Passenger → Booking → Booking Status → Review**. This ensures every request has the parent data it needs before it's sent, and lets negative tests intentionally violate that order to confirm the API fails safely and predictably.
+
+See [`POSTMAN_TESTING_GUIDE.md`](./POSTMAN_TESTING_GUIDE.md) for the exact request order, request bodies, and expected responses (positive and negative cases) for every endpoint.
+
+### Known Issues Found & Fixed During Testing
+
+Three defects were identified through manual FK-order testing and have since been fixed:
+
+| # | Endpoint | Issue | Fix |
+| --- | --- | --- | --- |
+| 1 | `PATCH /bookings/{id}/status` | A missing or misnamed `newStatus` field caused an unhandled `NullPointerException` (`500`) instead of a validation error | Added `@NotNull` on `BookingStatusUpdateDTO.newStatus` and a `MethodArgumentNotValidException` handler in `GlobalExceptionHandler` — now returns a clean `400 Bad Request` |
+| 2 | `DELETE /passengers/{id}` | Deleting a passenger with existing bookings threw an unhandled `DataIntegrityViolationException` (`500`) from the underlying MySQL FK constraint | Added `PassengerHasActiveBookingsException` with an explicit `countByPassengerId` pre-check — now returns `409 Conflict` with a descriptive message |
+| 3 | `DELETE /drivers/{id}` | Same root cause as #2, via the `fk_booking_driver` constraint | Added `DriverHasActiveBookingsException` with an explicit `countByDriverId` pre-check — now returns `409 Conflict` |
 
 ---
 
@@ -235,4 +259,4 @@ All handled exceptions return a consistent JSON shape via `ErrorResponseDTO`, e.
 
 ## License
 
-_No license added yet. Add a `LICENSE` file (e.g. MIT) here if you want others to be able to use or contribute to this project._
+*No license added yet. Add a `LICENSE` file (e.g. MIT) here if you want others to be able to use or contribute to this project.*
