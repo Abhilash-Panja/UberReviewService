@@ -1,14 +1,16 @@
-package org.example.uberreviewservice.models;
+package org.example.uberreviewservice.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalTime;
 
 
 @Entity
 @Setter
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking extends BaseModel{
@@ -17,9 +19,7 @@ public class Booking extends BaseModel{
     private LocalTime endTime;
     private long totalDistance;
     @Enumerated(EnumType.STRING)
-    private BookingStatus bookingStatus;
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    private Review review;
+    private BookingStatus bookingStatus;;
     @ManyToOne
     private Driver driver;
     @ManyToOne
