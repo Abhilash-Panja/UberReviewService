@@ -1,4 +1,4 @@
-package org.example.uberreviewservice.models;
+package org.example.uberreviewservice.model;
 
 public enum BookingStatus {
     STARTED,

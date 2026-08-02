@@ -1,14 +1,16 @@
-package org.example.uberreviewservice.models;
+package org.example.uberreviewservice.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalTime;
 
 
 @Entity
 @Setter
 @Getter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking extends BaseModel{
